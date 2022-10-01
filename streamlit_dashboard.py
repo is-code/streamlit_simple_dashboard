@@ -9,7 +9,6 @@ import plotly.express as px
 df = pd.read_excel("./注文履歴.xlsx", sheet_name="Sheet1", header=0, usecols="A:G")
 df = df.dropna()  # 空白データがある行を除外
 df[["単価", "数量", "金額"]] = df[["単価", "数量", "金額"]].astype(int)  # 金額や数量を整数型に変換
-# df["月"] = df["購入日"].apply(lambda x: str(x.month))  # "月"の列を追加
 df["月"] = df["購入日"].dt.month.astype(str)  # "月"の列を追加
 df["購入日|部署"] = df["購入日"].astype(str).str.cat(df["部署"], sep="|")  # "購入日|部署" 列を追加
 
