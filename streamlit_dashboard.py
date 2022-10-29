@@ -25,8 +25,8 @@ st.set_page_config(
 today = date.today()
 this_year = today.year
 this_month = today.month
-# this_year = 2022  # サンプルCSVをそのまま使用する場合はこの行のコメントを解除してください
-# this_month = 9  # サンプルCSVをそのまま使用する場合はこの行のコメントを解除してください
+this_year = 2022  # サンプルCSVをそのまま使用する場合はこの行のコメントを解除してください
+this_month = 9  # サンプルCSVをそのまま使用する場合はこの行のコメントを解除してください
 
 st.title(f"{this_year}年{this_month}月")
 
@@ -46,34 +46,34 @@ this_month_purchase = df.loc[df["購入日"].dt.month == this_month, "金額"].s
 col4.metric("💰今月の購入額", f"{this_month_purchase}円")
 
 
+# 3カラム表示 (1:2:2)
 col1, col2, col3 = st.columns([1, 2, 2])
+# 購入数TOP10
 many_df = df.groupby(by="品名").sum().sort_values(by="数量", ascending=False).reset_index()
 col1.subheader("購入数TOP10")
 col1.table(many_df[["品名", "単価", "数量", "金額"]].iloc[:10])
-
+# 部署別購入金額
 department_group_df = df.groupby(["部署", "月"]).sum()
 fig = px.bar(department_group_df.reset_index(), x="金額", y="部署", color="月", orientation="h")
 col2.subheader("部署別購入金額")
 col2.plotly_chart(fig, use_container_width=True)
-
+# 直近3件の購入
 recent_df = df[df["購入日|部署"].isin(sorted(df["購入日|部署"].unique())[-3:])]
 recent_df["購入日"] = recent_df["購入日"].dt.strftime("%Y-%m-%d")
 col3.subheader("直近3件の購入")
 col3.table(recent_df[view_columns])
 
-
 # 月ごとの購入金額推移
 month_group_df = df.groupby(["月", "部署"]).sum()
-
-fig = px.bar(month_group_df.reset_index(), x="月", y="金額", color="部署", barmode="relative", title="月別購入金額")
+fig = px.bar(month_group_df.reset_index(), x="月", y="金額", color="部署", title="月別購入金額")
 st.plotly_chart(fig, use_container_width=True)
 
 
 # 詳細表示
 with st.expander("詳細データ"):
    # 表示する期間の入力
-   min_date = df["購入日"].dt.to_pydatetime().min().date()
-   max_date = df["購入日"].dt.to_pydatetime().max().date()
+   min_date = df["購入日"].min().date()
+   max_date = df["購入日"].max().date()
    start_date, end_date = st.slider(
       "表示する期間を入力",
       min_value=min_date,
@@ -83,7 +83,9 @@ with st.expander("詳細データ"):
 
    col1, col2 = st.columns(2)
 
-   select_departments = col1.multiselect("表示部署", df["部署"].unique(), df["部署"].unique())
+   # 表示する部署の選択
+   departments = df["部署"].unique()
+   select_departments = col1.multiselect("表示部署", options=departments, default=departments)
 
    df["購入日"] = df["購入日"].apply(lambda x: x.date())
    detail_df = df[(start_date <= df["購入日"]) & (df["購入日"] <= end_date) & (df["部署"].isin(select_departments))]
